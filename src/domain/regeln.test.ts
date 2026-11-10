@@ -45,9 +45,9 @@ describe('pruefeWahl', () => {
   })
 
   it('verlangt eine Naturwissenschaft unter allen Kursen', () => {
-    expect(regelIds({ ...gueltig, gk2: 'politik', ak1: 'ds', ak2: 'geografie', gk1: 'mathe', lk1: 'kunst' })).toEqual([
-      'pflichtfaecher',
-    ])
+    const wahl: Wahl = { ...gueltig, gk2: 'politik', ak1: 'ds', ak2: 'geografie', gk1: 'mathe', lk1: 'kunst' }
+    expect(regelIds(wahl)).toEqual(['pflichtfaecher'])
+    expect(pruefeWahl(wahl)[0].meldung).toBe('Es fehlt eine Naturwissenschaft (Biologie oder Chemie).')
   })
 
   it('verlangt alle Aufgabenfelder schriftlich', () => {

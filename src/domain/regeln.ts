@@ -1,4 +1,4 @@
-import { fach } from './faecher'
+import { FAECHER, fach } from './faecher'
 import {
   ALLE,
   AUFGABENFELD_LABEL,
@@ -32,6 +32,15 @@ const faecherIn = (wahl: Wahl, kategorien: readonly Kategorie[]): Fach[] =>
 
 const enthaelt = (faecher: Fach[], id: string) => faecher.some((f) => f.id === id)
 
+/** „A, B oder C“ aus allen Fächern des Angebots, die die Bedingung erfüllen. */
+const aufzaehlung = (bedingung: (f: Fach) => boolean | undefined) => {
+  const namen = FAECHER.filter(bedingung).map((f) => f.name)
+  return namen.length > 1 ? `${namen.slice(0, -1).join(', ')} oder ${namen.at(-1)}` : (namen[0] ?? '')
+}
+
+const GESELLSCHAFTSWISSENSCHAFTEN = aufzaehlung((f) => f.gesellschaftswissenschaft)
+const NATURWISSENSCHAFTEN = aufzaehlung((f) => f.naturwissenschaft)
+
 export const REGELN: Regel[] = [
   {
     id: 'eindeutig',
@@ -53,9 +62,9 @@ export const REGELN: Regel[] = [
       const fehler: string[] = []
       if (!enthaelt(k, 'deutsch')) fehler.push('Deutsch fehlt.')
       if (!k.some((f) => f.gesellschaftswissenschaft))
-        fehler.push('Es fehlt ein gesellschaftswissenschaftliches Fach (Geografie oder Politikwissenschaft).')
+        fehler.push(`Es fehlt ein gesellschaftswissenschaftliches Fach (${GESELLSCHAFTSWISSENSCHAFTEN}).`)
       if (!enthaelt(k, 'mathe')) fehler.push('Mathematik fehlt.')
-      if (!k.some((f) => f.naturwissenschaft)) fehler.push('Es fehlt eine Naturwissenschaft (Biologie oder Chemie).')
+      if (!k.some((f) => f.naturwissenschaft)) fehler.push(`Es fehlt eine Naturwissenschaft (${NATURWISSENSCHAFTEN}).`)
       const sprachen = k.filter((f) => f.fremdsprache).length
       if (sprachen < 2) fehler.push(`Es werden zwei Fremdsprachen benötigt (gewählt: ${sprachen}).`)
       return fehler
