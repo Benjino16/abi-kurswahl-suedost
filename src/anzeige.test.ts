@@ -1,32 +1,58 @@
 import { describe, expect, it } from 'vitest'
-import { verteileErzwungenePaare, type Optionen } from './anzeige'
-import { angebotFuer, moeglicheFaecher } from './domain/solver'
-import { SLOTS, leereWahl, type Wahl } from './domain/types'
+import { gefuehrteAnzeige } from './anzeige'
+import { ergaenzePflicht, statischePflichtfaecher } from './domain/solver'
+import { leereWahl, type Wahl } from './domain/types'
 
-const optionenFuer = (wahl: Wahl) => {
-  const m = moeglicheFaecher(wahl)
-  return Object.fromEntries(SLOTS.map((s) => [s.id, angebotFuer(s).filter((id) => m[s.id].has(id))])) as Optionen
+const start = () => ergaenzePflicht(leereWahl())
+const optionen = (wahl: Wahl) => {
+  const a = gefuehrteAnzeige(wahl)
+  return (slot: keyof Wahl) => a[slot].optionen
 }
 
-const wahlMitFesterMgk: Wahl = { ...leereWahl(), lk1: 'mathe', lk2: 'chemie', gk1: 'deutsch', gk2: 'geografie' }
-
-describe('verteileErzwungenePaare', () => {
-  it('verteilt zwei verbleibende Fächer auf die beiden Slots', () => {
-    const o = verteileErzwungenePaare(wahlMitFesterMgk, optionenFuer(wahlMitFesterMgk))
-    expect(o.mgk1).toEqual(['englisch'])
-    expect(o.mgk2).toEqual(['russisch'])
+describe('statische Pflicht', () => {
+  it('erkennt Russisch als festes mGK-Fach', () => {
+    expect(statischePflichtfaecher()).toEqual([{ kategorie: 'mgk', fach: 'russisch' }])
   })
 
-  it('lässt ein bereits gewähltes Fach in seinem Slot', () => {
-    const wahl: Wahl = { ...wahlMitFesterMgk, mgk2: 'englisch' }
-    const o = verteileErzwungenePaare(wahl, optionenFuer(wahl))
-    expect(o.mgk1).toEqual(['russisch'])
-    expect(o.mgk2).toEqual(['englisch'])
+  it('trägt Russisch in den oberen mGK ein und sperrt ihn', () => {
+    const wahl = start()
+    expect(wahl.mgk1).toBe('russisch')
+    const a = gefuehrteAnzeige(wahl)
+    expect(a.mgk1).toMatchObject({ optionen: ['russisch'], gesperrt: true })
+    expect(a.mgk2.optionen).not.toContain('russisch')
   })
 
-  it('ändert nichts, solange es echte Alternativen gibt', () => {
-    const wahl = leereWahl()
-    const optionen = optionenFuer(wahl)
-    expect(verteileErzwungenePaare(wahl, optionen)).toEqual(optionen)
+  it('belässt Russisch im unteren mGK, wenn es dort schon steht', () => {
+    expect(ergaenzePflicht({ ...leereWahl(), mgk2: 'russisch' }).mgk1).toBeNull()
+  })
+})
+
+describe('gefuehrteAnzeige', () => {
+  it('begrenzt den oberen LK auf die Pflichtgruppe, der untere zeigt alles', () => {
+    const o = optionen(start())
+    expect(o('lk1')).toEqual(['deutsch', 'englisch', 'mathe'])
+    expect(o('lk2')).toEqual(['deutsch', 'englisch', 'kunst', 'mathe', 'biologie', 'chemie'])
+    expect(gefuehrteAnzeige(start()).lk1.info).toMatch(/Deutsch, Englisch oder Mathematik/)
+  })
+
+  it('macht den unteren Slot zum begrenzten, wenn dort ein Gruppenfach gewählt wird', () => {
+    const o = optionen({ ...start(), lk2: 'deutsch' })
+    expect(o('lk2')).toEqual(['deutsch', 'englisch', 'mathe'])
+    expect(o('lk1')).toContain('kunst')
+  })
+
+  it('begrenzt den oberen Slot, wenn unten ein Fach außerhalb der Gruppe steht', () => {
+    expect(optionen({ ...start(), lk2: 'kunst' })('lk1')).toEqual(['deutsch', 'englisch', 'mathe'])
+  })
+
+  it('hebt die Begrenzung auf, wenn beide Slots belegt sind', () => {
+    expect(optionen({ ...start(), lk1: 'deutsch', lk2: 'mathe' })('lk1')).toContain('kunst')
+  })
+
+  it('verteilt zwei erzwungene Fächer auf beide Slots', () => {
+    const wahl: Wahl = { ...start(), gk1: 'deutsch', gk2: 'geografie', mgk2: 'chemie' }
+    const o = optionen(wahl)
+    expect(o('lk1')).toEqual(['englisch'])
+    expect(o('lk2')).toEqual(['mathe'])
   })
 })

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { angebotFuer } from './domain/solver'
+import { useCallback, useEffect, useState } from 'react'
+import { angebotFuer, ergaenzePflicht } from './domain/solver'
 import { SLOTS, leereWahl, type Wahl } from './domain/types'
 
 export type Modus = 'gefuehrt' | 'frei'
@@ -29,9 +29,13 @@ function lade(): Zustand {
   }
 }
 
+/** In der geführten Wahl sind statische Pflichtfächer immer eingetragen. */
+export const normalisiere = (z: Zustand): Zustand =>
+  z.modus === 'gefuehrt' ? { ...z, wahl: ergaenzePflicht(z.wahl) } : z
+
 /** Modus und Wahl, im Browser des Nutzers gespeichert. */
 export function useGespeicherterZustand() {
-  const [zustand, setZustand] = useState(lade)
+  const [zustand, setZustand] = useState(() => normalisiere(lade()))
   useEffect(() => {
     try {
       localStorage.setItem(SCHLUESSEL, JSON.stringify(zustand))
@@ -39,5 +43,6 @@ export function useGespeicherterZustand() {
       // Speichern ist nur Komfort; ohne Storage funktioniert die App trotzdem.
     }
   }, [zustand])
-  return [zustand, setZustand] as const
+  const aendere = useCallback((f: (z: Zustand) => Zustand) => setZustand((z) => normalisiere(f(z))), [])
+  return [zustand, aendere] as const
 }

@@ -1,6 +1,6 @@
-import { FAECHER } from './faecher'
+import { FAECHER, sortiert } from './faecher'
 import { pruefeWahl } from './regeln'
-import { SLOTS, leereWahl, type Slot, type SlotId, type Wahl } from './types'
+import { KATEGORIEN, SLOTS, leereWahl, type Kategorie, type Slot, type SlotId, type Wahl } from './types'
 
 /** Fach-IDs, die in der Kursart des Slots angeboten werden. */
 export const angebotFuer = (slot: Slot): string[] =>
@@ -65,6 +65,56 @@ export function moeglicheFaecher(wahl: Wahl, gueltig = alleGueltigenWahlen()): R
     else for (const s of SLOTS) moeglich[s.id].add(kandidat[s.id]!)
   }
   return moeglich
+}
+
+function* kombinationen<T>(liste: T[], groesse: number, ab = 0): Generator<T[]> {
+  if (groesse === 0) {
+    yield []
+    return
+  }
+  for (let i = ab; i <= liste.length - groesse; i++)
+    for (const rest of kombinationen(liste, groesse - 1, i + 1)) yield [liste[i], ...rest]
+}
+
+/**
+ * Kleinste Fächergruppe S, von der jede Kandidatenwahl in Slot a oder b
+ * mindestens ein Fach enthält. Bei Gleichstand gewinnt die Reihenfolge im Kursangebot.
+ */
+export function kleinsteGruppe(kandidaten: Wahl[], a: SlotId, b: SlotId): Set<string> {
+  const paare = [...new Map(kandidaten.map((v) => [[v[a], v[b]].sort().join('|'), [v[a]!, v[b]!]])).values()]
+  const faecher = sortiert(paare.flat())
+  for (let groesse = 1; groesse < faecher.length; groesse++) {
+    for (const gruppe of kombinationen(faecher, groesse)) {
+      if (paare.every(([x, y]) => gruppe.includes(x) || gruppe.includes(y))) return new Set(gruppe)
+    }
+  }
+  return new Set(faecher)
+}
+
+let pflichtCache: { kategorie: Kategorie; fach: string }[] | null = null
+
+/** Fächer, die unabhängig von jeder Auswahl in einer bestimmten Kursart belegt werden müssen. */
+export function statischePflichtfaecher() {
+  if (pflichtCache) return pflichtCache
+  const gueltig = alleGueltigenWahlen()
+  pflichtCache = KATEGORIEN.flatMap((k) => {
+    const slots = SLOTS.filter((s) => s.kategorie === k.id)
+    return FAECHER.filter(
+      (f) => gueltig.length > 0 && gueltig.every((v) => slots.some((s) => v[s.id] === f.id)),
+    ).map((f) => ({ kategorie: k.id, fach: f.id }))
+  })
+  return pflichtCache
+}
+
+/** Trägt statische Pflichtfächer in den ersten freien Slot ihrer Kursart ein. */
+export function ergaenzePflicht(wahl: Wahl): Wahl {
+  const neu = { ...wahl }
+  for (const { kategorie, fach } of statischePflichtfaecher()) {
+    if (Object.values(neu).includes(fach)) continue
+    const frei = SLOTS.find((s) => s.kategorie === kategorie && neu[s.id] === null)
+    if (frei) neu[frei.id] = fach
+  }
+  return neu
 }
 
 /** Lässt sich die (Teil-)Wahl noch regelkonform vervollständigen? */

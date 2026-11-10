@@ -22,3 +22,13 @@ export const fach = (id: string): Fach => {
 }
 
 export const istFach = (id: string) => FACH_NACH_ID.has(id)
+
+/** Fach-IDs in der Reihenfolge des Kursangebots. */
+export const sortiert = (ids: Iterable<string>): string[] => {
+  const menge = new Set(ids)
+  return FAECHER.map((f) => f.id).filter((id) => menge.has(id))
+}
+
+/** „A, B oder C“ */
+export const oderListe = (namen: string[]) =>
+  namen.length > 1 ? `${namen.slice(0, -1).join(', ')} oder ${namen.at(-1)}` : (namen[0] ?? '')

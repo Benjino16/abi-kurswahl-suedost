@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
-import { verteileErzwungenePaare, type Optionen } from './anzeige'
+import { freieAnzeige, gefuehrteAnzeige } from './anzeige'
 import { RegelStatus } from './components/RegelStatus'
 import { SlotKarte } from './components/SlotKarte'
-import { angebotFuer, istVervollstaendigbar, moeglicheFaecher } from './domain/solver'
+import { istVervollstaendigbar } from './domain/solver'
 import { KATEGORIEN, SLOTS, leereWahl, type SlotId } from './domain/types'
-import { useGespeicherterZustand, type Modus } from './zustand'
+import { normalisiere, useGespeicherterZustand, type Modus } from './zustand'
 
 const MODI: { id: Modus; label: string; hinweis: string }[] = [
   {
@@ -22,23 +22,14 @@ const MODI: { id: Modus; label: string; hinweis: string }[] = [
 function App() {
   const [{ modus, wahl }, setZustand] = useGespeicherterZustand()
 
-  const moeglich = useMemo(() => (modus === 'gefuehrt' ? moeglicheFaecher(wahl) : null), [modus, wahl])
+  const anzeige = useMemo(() => (modus === 'gefuehrt' ? gefuehrteAnzeige(wahl) : freieAnzeige()), [modus, wahl])
   const sackgasse = modus === 'gefuehrt' && !istVervollstaendigbar(wahl)
-
-  const optionen = useMemo(() => {
-    const o = Object.fromEntries(
-      SLOTS.map((s) => {
-        const angebot = angebotFuer(s)
-        return [s.id, moeglich ? angebot.filter((id) => moeglich[s.id].has(id)) : angebot]
-      }),
-    ) as Optionen
-    return moeglich ? verteileErzwungenePaare(wahl, o) : o
-  }, [moeglich, wahl])
 
   const waehle = (slot: SlotId, id: string | null) => setZustand((z) => ({ ...z, wahl: { ...z.wahl, [slot]: id } }))
   const setModus = (m: Modus) => setZustand((z) => ({ ...z, modus: m }))
   const zuruecksetzen = () => setZustand((z) => ({ ...z, wahl: leereWahl() }))
-  const hatAuswahl = SLOTS.some((s) => wahl[s.id] !== null)
+  const grundzustand = normalisiere({ modus, wahl: leereWahl() }).wahl
+  const hatAuswahl = SLOTS.some((s) => wahl[s.id] !== grundzustand[s.id])
 
   return (
     <main>
@@ -81,7 +72,7 @@ function App() {
                 key={slot.id}
                 slot={slot}
                 gewaehlt={wahl[slot.id]}
-                optionen={optionen[slot.id]}
+                anzeige={anzeige[slot.id]}
                 onWaehle={(id) => waehle(slot.id, id)}
               />
             ))}
