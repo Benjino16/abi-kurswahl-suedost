@@ -203,6 +203,11 @@ button:focus-visible {
   white-space: nowrap;
 }
 
+.slot-wert.einzig {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
 .slot-leer {
   margin: 0;
   font-size: 0.9rem;

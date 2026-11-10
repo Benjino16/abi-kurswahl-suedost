@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
+import { verteileErzwungenePaare, type Optionen } from './anzeige'
 import { RegelStatus } from './components/RegelStatus'
 import { SlotKarte } from './components/SlotKarte'
 import { angebotFuer, istVervollstaendigbar, moeglicheFaecher } from './domain/solver'
-import { KATEGORIEN, SLOTS, leereWahl, type Slot, type SlotId } from './domain/types'
+import { KATEGORIEN, SLOTS, leereWahl, type SlotId } from './domain/types'
 import { useGespeicherterZustand, type Modus } from './zustand'
 
 const MODI: { id: Modus; label: string; hinweis: string }[] = [
@@ -24,10 +25,15 @@ function App() {
   const moeglich = useMemo(() => (modus === 'gefuehrt' ? moeglicheFaecher(wahl) : null), [modus, wahl])
   const sackgasse = modus === 'gefuehrt' && !istVervollstaendigbar(wahl)
 
-  const optionenFuer = (slot: Slot) => {
-    const angebot = angebotFuer(slot)
-    return moeglich ? angebot.filter((id) => moeglich[slot.id].has(id)) : angebot
-  }
+  const optionen = useMemo(() => {
+    const o = Object.fromEntries(
+      SLOTS.map((s) => {
+        const angebot = angebotFuer(s)
+        return [s.id, moeglich ? angebot.filter((id) => moeglich[s.id].has(id)) : angebot]
+      }),
+    ) as Optionen
+    return moeglich ? verteileErzwungenePaare(wahl, o) : o
+  }, [moeglich, wahl])
 
   const waehle = (slot: SlotId, id: string | null) => setZustand((z) => ({ ...z, wahl: { ...z.wahl, [slot]: id } }))
   const setModus = (m: Modus) => setZustand((z) => ({ ...z, modus: m }))
@@ -75,7 +81,7 @@ function App() {
                 key={slot.id}
                 slot={slot}
                 gewaehlt={wahl[slot.id]}
-                optionen={optionenFuer(slot)}
+                optionen={optionen[slot.id]}
                 onWaehle={(id) => waehle(slot.id, id)}
               />
             ))}

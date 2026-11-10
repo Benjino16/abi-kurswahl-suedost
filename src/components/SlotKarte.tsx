@@ -19,7 +19,13 @@ export function SlotKarte({ slot, gewaehlt, optionen, onWaehle }: Props) {
         <span id={titelId} className="slot-label">
           {slot.label}
         </span>
-        <span className="slot-wert">{gewaehlt ? fach(gewaehlt).name : 'offen'}</span>
+        {gewaehlt ? (
+          <span className="slot-wert">{fach(gewaehlt).name}</span>
+        ) : sichtbar.length === 1 ? (
+          <span className="slot-wert einzig">einzige Option</span>
+        ) : (
+          <span className="slot-wert">offen</span>
+        )}
       </div>
       {sichtbar.length === 0 ? (
         <p className="slot-leer">Keine passende Option.</p>
