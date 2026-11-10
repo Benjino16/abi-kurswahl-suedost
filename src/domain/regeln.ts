@@ -1,7 +1,7 @@
 import { fach } from './faecher'
 import {
+  ALLE,
   AUFGABENFELD_LABEL,
-  PRUEFUNG,
   SCHRIFTLICH,
   SLOTS,
   type Aufgabenfeld,
@@ -38,26 +38,26 @@ export const REGELN: Regel[] = [
     titel: 'Jedes Fach nur einmal',
     beschreibung: 'Ein Fach kann nur in einem einzigen Kurs belegt werden.',
     pruefe: (wahl) => {
-      const alle = faecherIn(wahl, ['lk', 'gk', 'mgk', 'ak'])
+      const alle = faecherIn(wahl, ALLE)
       const doppelt = new Set(alle.filter((f, i) => alle.indexOf(f) !== i))
       return [...doppelt].map((f) => `${f.name} ist mehrfach gewählt.`)
     },
   },
   {
     id: 'pflichtfaecher',
-    titel: 'Pflichtfächer unter den Prüfungsfächern',
+    titel: 'Pflichtfächer unter allen Kursen',
     beschreibung:
-      'Unter den Prüfungsfächern (LK, GK, mGK) müssen Deutsch, Geografie oder ein anderes gesellschaftswissenschaftliches Fach, Mathematik, eine Naturwissenschaft und zwei Fremdsprachen sein.',
+      'Unter allen Kursen (LK, GK, mGK und AK) müssen Deutsch, Geografie oder ein anderes gesellschaftswissenschaftliches Fach, Mathematik, eine Naturwissenschaft und zwei Fremdsprachen sein.',
     pruefe: (wahl) => {
-      const p = faecherIn(wahl, PRUEFUNG)
+      const k = faecherIn(wahl, ALLE)
       const fehler: string[] = []
-      if (!enthaelt(p, 'deutsch')) fehler.push('Deutsch fehlt als Prüfungsfach.')
-      if (!p.some((f) => f.gesellschaftswissenschaft))
-        fehler.push('Es fehlt ein gesellschaftswissenschaftliches Prüfungsfach (Geografie oder Politikwissenschaft).')
-      if (!enthaelt(p, 'mathe')) fehler.push('Mathematik fehlt als Prüfungsfach.')
-      if (!p.some((f) => f.naturwissenschaft)) fehler.push('Es fehlt eine Naturwissenschaft als Prüfungsfach.')
-      const sprachen = p.filter((f) => f.fremdsprache).length
-      if (sprachen < 2) fehler.push(`Es werden zwei Fremdsprachen als Prüfungsfächer benötigt (gewählt: ${sprachen}).`)
+      if (!enthaelt(k, 'deutsch')) fehler.push('Deutsch fehlt.')
+      if (!k.some((f) => f.gesellschaftswissenschaft))
+        fehler.push('Es fehlt ein gesellschaftswissenschaftliches Fach (Geografie oder Politikwissenschaft).')
+      if (!enthaelt(k, 'mathe')) fehler.push('Mathematik fehlt.')
+      if (!k.some((f) => f.naturwissenschaft)) fehler.push('Es fehlt eine Naturwissenschaft (Biologie oder Chemie).')
+      const sprachen = k.filter((f) => f.fremdsprache).length
+      if (sprachen < 2) fehler.push(`Es werden zwei Fremdsprachen benötigt (gewählt: ${sprachen}).`)
       return fehler
     },
   },

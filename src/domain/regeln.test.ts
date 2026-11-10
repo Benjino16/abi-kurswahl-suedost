@@ -25,8 +25,29 @@ describe('pruefeWahl', () => {
     expect(regelIds({ ...gueltig, ak2: 'chemie' })).toContain('eindeutig')
   })
 
-  it('verlangt zwei Fremdsprachen unter den Prüfungsfächern', () => {
+  it('akzeptiert Kunst-LK mit Naturwissenschaft als Anrechnungskurs', () => {
+    expect(
+      pruefeWahl({
+        lk1: 'kunst',
+        lk2: 'deutsch',
+        gk1: 'geografie',
+        gk2: 'mathe',
+        mgk1: 'englisch',
+        mgk2: 'russisch',
+        ak1: 'ds',
+        ak2: 'biologie',
+      }),
+    ).toEqual([])
+  })
+
+  it('verlangt zwei Fremdsprachen unter allen Kursen', () => {
     expect(regelIds({ ...gueltig, mgk2: 'politik', ak1: 'ds' })).toEqual(['pflichtfaecher'])
+  })
+
+  it('verlangt eine Naturwissenschaft unter allen Kursen', () => {
+    expect(regelIds({ ...gueltig, gk2: 'politik', ak1: 'ds', ak2: 'geografie', gk1: 'mathe', lk1: 'kunst' })).toEqual([
+      'pflichtfaecher',
+    ])
   })
 
   it('verlangt alle Aufgabenfelder schriftlich', () => {
@@ -55,6 +76,12 @@ describe('solver', () => {
 
   it('erzwingt nach Biologie-LK ein Kernfach als zweiten LK', () => {
     const m = moeglicheFaecher({ ...leereWahl(), lk1: 'biologie' })
+    expect([...m.lk2].sort()).toEqual(['deutsch', 'englisch', 'mathe'])
+  })
+
+  it('bietet nach Kunst-LK nur Kernfächer als zweiten LK an', () => {
+    expect(moeglicheFaecher(leereWahl()).lk1.has('kunst')).toBe(true)
+    const m = moeglicheFaecher({ ...leereWahl(), lk1: 'kunst' })
     expect([...m.lk2].sort()).toEqual(['deutsch', 'englisch', 'mathe'])
   })
 

@@ -8,8 +8,7 @@ export const KATEGORIEN: { id: Kategorie; label: string }[] = [
   { id: 'ak', label: 'Anrechnungskurse' },
 ]
 
-/** Kursarten, deren Fächer Prüfungsfächer sind. */
-export const PRUEFUNG: readonly Kategorie[] = ['lk', 'gk', 'mgk']
+export const ALLE: readonly Kategorie[] = ['lk', 'gk', 'mgk', 'ak']
 /** Kursarten, deren Fächer schriftlich geprüft werden. */
 export const SCHRIFTLICH: readonly Kategorie[] = ['lk', 'gk']
 
