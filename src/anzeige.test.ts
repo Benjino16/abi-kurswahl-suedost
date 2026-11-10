@@ -49,6 +49,19 @@ describe('gefuehrteAnzeige', () => {
     expect(optionen({ ...start(), lk1: 'deutsch', lk2: 'mathe' })('lk1')).toContain('kunst')
   })
 
+  it('zeigt neben gesperrtem Russisch keine Tausch-Alternative', () => {
+    const o = optionen({ ...start(), lk1: 'englisch', lk2: 'kunst' })
+    expect(o('mgk1')).toEqual(['russisch'])
+    expect(o('mgk2')).toEqual(['deutsch'])
+  })
+
+  it('behält bei erzwungenem Paar das gewählte Fach im eigenen Slot', () => {
+    const wahl: Wahl = { ...start(), gk1: 'deutsch', gk2: 'geografie', mgk2: 'chemie', lk1: 'mathe' }
+    const o = optionen(wahl)
+    expect(o('lk1')).toEqual(['mathe'])
+    expect(o('lk2')).toEqual(['englisch'])
+  })
+
   it('verteilt zwei erzwungene Fächer auf beide Slots', () => {
     const wahl: Wahl = { ...start(), gk1: 'deutsch', gk2: 'geografie', mgk2: 'chemie' }
     const o = optionen(wahl)

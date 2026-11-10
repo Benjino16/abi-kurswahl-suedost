@@ -78,15 +78,17 @@ function* kombinationen<T>(liste: T[], groesse: number, ab = 0): Generator<T[]> 
 
 /**
  * Kleinste Fächergruppe S, von der jede Kandidatenwahl in Slot a oder b
- * mindestens ein Fach enthält. Bei Gleichstand gewinnt die Reihenfolge im Kursangebot.
+ * mindestens ein Fach enthält. Bei Gleichstand gewinnt eine Gruppe mit dem
+ * bevorzugten (bereits gewählten) Fach, danach die Reihenfolge im Kursangebot.
  */
-export function kleinsteGruppe(kandidaten: Wahl[], a: SlotId, b: SlotId): Set<string> {
+export function kleinsteGruppe(kandidaten: Wahl[], a: SlotId, b: SlotId, bevorzugt?: string | null): Set<string> {
   const paare = [...new Map(kandidaten.map((v) => [[v[a], v[b]].sort().join('|'), [v[a]!, v[b]!]])).values()]
   const faecher = sortiert(paare.flat())
   for (let groesse = 1; groesse < faecher.length; groesse++) {
-    for (const gruppe of kombinationen(faecher, groesse)) {
-      if (paare.every(([x, y]) => gruppe.includes(x) || gruppe.includes(y))) return new Set(gruppe)
-    }
+    const treffer = [...kombinationen(faecher, groesse)].filter((gruppe) =>
+      paare.every(([x, y]) => gruppe.includes(x) || gruppe.includes(y)),
+    )
+    if (treffer.length > 0) return new Set(treffer.find((g) => bevorzugt && g.includes(bevorzugt)) ?? treffer[0])
   }
   return new Set(faecher)
 }

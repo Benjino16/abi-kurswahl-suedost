@@ -45,7 +45,7 @@ export function gefuehrteAnzeige(wahl: Wahl): Anzeige {
       SLOTS.every((s) => ids.includes(s.id) || wahl[s.id] === null || v[s.id] === wahl[s.id]),
     )
     if (kandidaten.length === 0) continue
-    const gruppe = kleinsteGruppe(kandidaten, oben, unten)
+    const gruppe = kleinsteGruppe(kandidaten, oben, unten, a ?? b)
 
     const begrenzt = a !== null ? (gruppe.has(a) ? oben : unten) : b !== null ? (gruppe.has(b) ? unten : oben) : oben
     const anderer = begrenzt === oben ? unten : oben
@@ -77,7 +77,7 @@ export function gefuehrteAnzeige(wahl: Wahl): Anzeige {
         return [
           s.id,
           {
-            optionen: o,
+            optionen: [wahl[s.id]!],
             gesperrt: true,
             info: `${name} muss in jeder gültigen Wahl in dieser Kursart belegt werden und ist deshalb fest eingetragen.`,
           },
