@@ -73,6 +73,7 @@ function App() {
                 slot={slot}
                 gewaehlt={wahl[slot.id]}
                 anzeige={anzeige[slot.id]}
+                zeigeFeld={modus === 'frei'}
                 onWaehle={(id) => waehle(slot.id, id)}
               />
             ))}
@@ -82,10 +83,12 @@ function App() {
 
       <RegelStatus wahl={wahl} modus={modus} />
 
-      <footer className="legende">
-        Aufgabenfelder: <b>I</b> sprachlich-literarisch-künstlerisch · <b>II</b> gesellschaftswissenschaftlich ·{' '}
-        <b>III</b> mathematisch-naturwissenschaftlich
-      </footer>
+      {modus === 'frei' && (
+        <footer className="legende">
+          Aufgabenfelder: <b>I</b> sprachlich-literarisch-künstlerisch · <b>II</b> gesellschaftswissenschaftlich ·{' '}
+          <b>III</b> mathematisch-naturwissenschaftlich
+        </footer>
+      )}
     </main>
   )
 }

@@ -7,10 +7,11 @@ interface Props {
   slot: Slot
   gewaehlt: string | null
   anzeige: SlotAnzeige
+  zeigeFeld: boolean
   onWaehle: (id: string | null) => void
 }
 
-export function SlotKarte({ slot, gewaehlt, anzeige, onWaehle }: Props) {
+export function SlotKarte({ slot, gewaehlt, anzeige, zeigeFeld, onWaehle }: Props) {
   const { optionen, info, gesperrt } = anzeige
   // Das gewählte Fach bleibt sichtbar, auch wenn es nicht mehr zu den Optionen passt.
   const sichtbar = gewaehlt && !optionen.includes(gewaehlt) ? [gewaehlt, ...optionen] : optionen
@@ -69,9 +70,11 @@ export function SlotKarte({ slot, gewaehlt, anzeige, onWaehle }: Props) {
               >
                 {gesperrt && aktiv && <SchlossIcon />}
                 {f.name}
-                <span className="feld" title={`Aufgabenfeld ${AUFGABENFELD_LABEL[f.aufgabenfeld]}`}>
-                  {AUFGABENFELD_LABEL[f.aufgabenfeld]}
-                </span>
+                {zeigeFeld && (
+                  <span className="feld" title={`Aufgabenfeld ${AUFGABENFELD_LABEL[f.aufgabenfeld]}`}>
+                    {AUFGABENFELD_LABEL[f.aufgabenfeld]}
+                  </span>
+                )}
               </button>
             )
           })}
