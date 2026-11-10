@@ -1,11 +1,102 @@
-import type { Wahl } from './types'
+import { fach } from './faecher'
+import {
+  AUFGABENFELD_LABEL,
+  PRUEFUNG,
+  SCHRIFTLICH,
+  SLOTS,
+  type Aufgabenfeld,
+  type Fach,
+  type Kategorie,
+  type Wahl,
+} from './types'
+
+export interface Regel {
+  id: string
+  titel: string
+  beschreibung: string
+  /** Liefert eine Meldung pro Verstoß; leer, wenn die Regel erfüllt ist. */
+  pruefe: (wahl: Wahl) => string[]
+}
 
 export interface Verstoss {
-  regel: string
+  regel: Regel
   meldung: string
 }
 
-/** Prüft eine Wahl gegen die Schulregeln. Regeln folgen, sobald sie feststehen. */
-export function pruefeWahl(_wahl: Wahl): Verstoss[] {
-  return []
+/** Alle gewählten Fächer in Slots der angegebenen Kursarten. */
+const faecherIn = (wahl: Wahl, kategorien: readonly Kategorie[]): Fach[] =>
+  SLOTS.filter((s) => kategorien.includes(s.kategorie))
+    .map((s) => wahl[s.id])
+    .filter((id) => id !== null)
+    .map(fach)
+
+const enthaelt = (faecher: Fach[], id: string) => faecher.some((f) => f.id === id)
+
+export const REGELN: Regel[] = [
+  {
+    id: 'eindeutig',
+    titel: 'Jedes Fach nur einmal',
+    beschreibung: 'Ein Fach kann nur in einem einzigen Kurs belegt werden.',
+    pruefe: (wahl) => {
+      const alle = faecherIn(wahl, ['lk', 'gk', 'mgk', 'ak'])
+      const doppelt = new Set(alle.filter((f, i) => alle.indexOf(f) !== i))
+      return [...doppelt].map((f) => `${f.name} ist mehrfach gewählt.`)
+    },
+  },
+  {
+    id: 'pflichtfaecher',
+    titel: 'Pflichtfächer unter den Prüfungsfächern',
+    beschreibung:
+      'Unter den Prüfungsfächern (LK, GK, mGK) müssen Deutsch, Geografie oder ein anderes gesellschaftswissenschaftliches Fach, Mathematik, eine Naturwissenschaft und zwei Fremdsprachen sein.',
+    pruefe: (wahl) => {
+      const p = faecherIn(wahl, PRUEFUNG)
+      const fehler: string[] = []
+      if (!enthaelt(p, 'deutsch')) fehler.push('Deutsch fehlt als Prüfungsfach.')
+      if (!p.some((f) => f.gesellschaftswissenschaft))
+        fehler.push('Es fehlt ein gesellschaftswissenschaftliches Prüfungsfach (Geografie oder Politikwissenschaft).')
+      if (!enthaelt(p, 'mathe')) fehler.push('Mathematik fehlt als Prüfungsfach.')
+      if (!p.some((f) => f.naturwissenschaft)) fehler.push('Es fehlt eine Naturwissenschaft als Prüfungsfach.')
+      const sprachen = p.filter((f) => f.fremdsprache).length
+      if (sprachen < 2) fehler.push(`Es werden zwei Fremdsprachen als Prüfungsfächer benötigt (gewählt: ${sprachen}).`)
+      return fehler
+    },
+  },
+  {
+    id: 'aufgabenfelder',
+    titel: 'Alle Aufgabenfelder schriftlich',
+    beschreibung: 'Aus jedem Aufgabenfeld (I, II, III) muss mindestens ein schriftliches Prüfungsfach (LK oder GK) kommen.',
+    pruefe: (wahl) => {
+      const felder = new Set(faecherIn(wahl, SCHRIFTLICH).map((f) => f.aufgabenfeld))
+      return ([1, 2, 3] as Aufgabenfeld[])
+        .filter((a) => !felder.has(a))
+        .map((a) => `Kein schriftliches Prüfungsfach aus Aufgabenfeld ${AUFGABENFELD_LABEL[a]}.`)
+    },
+  },
+  {
+    id: 'schriftlich-kern',
+    titel: 'Mathematik und Deutsch/Fremdsprache schriftlich',
+    beschreibung: 'Unter den schriftlichen Prüfungsfächern müssen Mathematik und Deutsch oder eine Fremdsprache sein.',
+    pruefe: (wahl) => {
+      const s = faecherIn(wahl, SCHRIFTLICH)
+      const fehler: string[] = []
+      if (!enthaelt(s, 'mathe')) fehler.push('Mathematik muss schriftlich (LK oder GK) geprüft werden.')
+      if (!s.some((f) => f.id === 'deutsch' || f.fremdsprache))
+        fehler.push('Deutsch oder eine Fremdsprache muss schriftlich (LK oder GK) geprüft werden.')
+      return fehler
+    },
+  },
+  {
+    id: 'leistungsfaecher',
+    titel: 'Kernfach als Leistungskurs',
+    beschreibung: 'Eines der Leistungsfächer muss Deutsch, Mathematik oder eine Fremdsprache sein.',
+    pruefe: (wahl) => {
+      const lks = faecherIn(wahl, ['lk'])
+      const ok = lks.some((f) => f.id === 'deutsch' || f.id === 'mathe' || f.fremdsprache)
+      return ok ? [] : ['Mindestens ein LK muss Deutsch, Mathematik oder eine Fremdsprache sein.']
+    },
+  },
+]
+
+export function pruefeWahl(wahl: Wahl): Verstoss[] {
+  return REGELN.flatMap((regel) => regel.pruefe(wahl).map((meldung) => ({ regel, meldung })))
 }
