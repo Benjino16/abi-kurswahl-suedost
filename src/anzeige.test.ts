@@ -62,6 +62,12 @@ describe('gefuehrteAnzeige', () => {
     expect(o('lk2')).toEqual(['englisch'])
   })
 
+  it('zeigt neben gewähltem Gesellschaftsfach keine Tausch-Alternative, wenn unten nur Mathe bleibt', () => {
+    const o = optionen({ ...start(), gk1: 'geografie', lk1: 'deutsch', lk2: 'englisch' })
+    expect(o('gk2')).toEqual(['mathe'])
+    expect(o('gk1')).toEqual(['geografie', 'politik'])
+  })
+
   it('verteilt zwei erzwungene Fächer auf beide Slots', () => {
     const wahl: Wahl = { ...start(), gk1: 'deutsch', gk2: 'geografie', mgk2: 'chemie' }
     const o = optionen(wahl)

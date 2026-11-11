@@ -52,7 +52,9 @@ export function gefuehrteAnzeige(wahl: Wahl): Anzeige {
 
     const vorher = optionen[begrenzt]
     optionen[begrenzt] = vorher.filter((id) => gruppe.has(id))
-    if (a === null && b === null) {
+    // Ist der begrenzte Slot noch frei, zeigt der andere nur Fächer, die zu einem Gruppenfach passen –
+    // sonst erscheinen dort Tausch-Alternativen, die die Gruppe in diesen Slot verschieben würden.
+    if (wahl[begrenzt] === null) {
       optionen[anderer] = sortiert(kandidaten.filter((v) => gruppe.has(v[begrenzt]!)).map((v) => v[anderer]!))
     }
     if (optionen[begrenzt].length > 1 && optionen[begrenzt].length < vorher.length) {
