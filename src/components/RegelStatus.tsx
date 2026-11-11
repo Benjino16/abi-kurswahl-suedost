@@ -42,30 +42,47 @@ export function RegelStatus({ wahl, modus }: Props) {
         </div>
       </div>
 
-      <ul className="regeln">
-        {REGELN.map((regel) => {
-          const meldungen = verstoesse.filter((v) => v.regel === regel).map((v) => v.meldung)
-          const klasse = !vollstaendig ? 'neutral' : meldungen.length ? 'verletzt' : 'erfuellt'
-          return (
-            <li key={regel.id} className={`regel regel-${klasse}`}>
-              <span className="regel-icon" aria-hidden="true">
-                {klasse === 'erfuellt' ? '✓' : klasse === 'verletzt' ? '✕' : '•'}
-              </span>
-              <div>
-                <strong>{regel.titel}</strong>
-                <span className="regel-text">{regel.beschreibung}</span>
-                {meldungen.length > 0 && (
-                  <ul className="meldungen">
-                    {meldungen.map((m) => (
-                      <li key={m}>{m}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+      <RegelListe regeln={REGELN} verstoesse={verstoesse} geprueft={vollstaendig} />
     </section>
+  )
+}
+
+interface RegelListeProps<R extends { id: string; titel: string; beschreibung: string }> {
+  regeln: R[]
+  verstoesse: { regel: R; meldung: string }[]
+  /** Solange nicht geprüft wird, erscheinen alle Regeln neutral. */
+  geprueft: boolean
+}
+
+export function RegelListe<R extends { id: string; titel: string; beschreibung: string }>({
+  regeln,
+  verstoesse,
+  geprueft,
+}: RegelListeProps<R>) {
+  return (
+    <ul className="regeln">
+      {regeln.map((regel) => {
+        const meldungen = verstoesse.filter((v) => v.regel === regel).map((v) => v.meldung)
+        const klasse = !geprueft ? 'neutral' : meldungen.length ? 'verletzt' : 'erfuellt'
+        return (
+          <li key={regel.id} className={`regel regel-${klasse}`}>
+            <span className="regel-icon" aria-hidden="true">
+              {klasse === 'erfuellt' ? '✓' : klasse === 'verletzt' ? '✕' : '•'}
+            </span>
+            <div>
+              <strong>{regel.titel}</strong>
+              <span className="regel-text">{regel.beschreibung}</span>
+              {meldungen.length > 0 && (
+                <ul className="meldungen">
+                  {meldungen.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
