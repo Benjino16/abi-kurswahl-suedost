@@ -42,7 +42,7 @@ export function Notenrechner({ wahl, punkte, skala, onPunkte, onSkala }: Props) 
 
   return (
     <>
-      <div className="skala">
+      <div className="umschalter">
         <span>Eingabe als</span>
         <div className="modus" role="group" aria-label="Skala">
           <button type="button" aria-pressed={skala === 'noten'} onClick={() => onSkala('noten')}>

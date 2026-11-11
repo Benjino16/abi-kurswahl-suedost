@@ -6,38 +6,38 @@ import { SlotKarte } from './components/SlotKarte'
 import { GEWICHT, leerePunkte } from './domain/noten'
 import { istVervollstaendigbar } from './domain/solver'
 import { KATEGORIEN, SLOTS, leereWahl, type SlotId } from './domain/types'
-import { normalisiere, useGespeicherterZustand, type Modus } from './zustand'
+import { normalisiere, useGespeicherterZustand, type Ansicht, type Modus } from './zustand'
 
-/** Tabs: die beiden Modi der Kurswahl und der Notenrechner. */
-const TABS: { id: Modus | 'noten'; label: string; hinweis: string }[] = [
+const TABS: { id: Ansicht; label: string }[] = [
+  { id: 'wahl', label: 'Kurswahl' },
+  { id: 'noten', label: 'Notenrechner' },
+]
+
+const MODI: { id: Modus; label: string; hinweis: string }[] = [
   {
     id: 'gefuehrt',
-    label: 'Geführte Wahl',
+    label: 'Automatisch',
     hinweis: 'Es werden nur Fächer angezeigt, mit denen sich deine Wahl noch regelkonform vervollständigen lässt.',
   },
   {
     id: 'frei',
-    label: 'Freie Wahl',
+    label: 'Frei',
     hinweis: 'Alle angebotenen Fächer sind wählbar. Sobald alle Kurse belegt sind, wird deine Wahl gegen die Regeln geprüft.',
   },
-  {
-    id: 'noten',
-    label: 'Notenrechner',
-    hinweis: `Stelle für jeden Kurs deine (erwartete) Note ein. Gerechnet wird in Punkten: LK ×${GEWICHT.lk}, GK ×${GEWICHT.gk}, mGK und AK ×${GEWICHT.mgk}.`,
-  },
 ]
+
+const NOTEN_HINWEIS = `Stelle für jeden Kurs deine (erwartete) Note ein. Gerechnet wird in Punkten: LK ×${GEWICHT.lk}, GK ×${GEWICHT.gk}, mGK und AK ×${GEWICHT.mgk}.`
 
 function App() {
   const [zustand, setZustand] = useGespeicherterZustand()
   const { modus, ansicht, wahl, punkte, skala } = zustand
-  const tab = ansicht === 'noten' ? 'noten' : modus
 
   const anzeige = useMemo(() => (modus === 'gefuehrt' ? gefuehrteAnzeige(wahl) : freieAnzeige()), [modus, wahl])
   const sackgasse = ansicht === 'wahl' && modus === 'gefuehrt' && !istVervollstaendigbar(wahl)
 
   const waehle = (slot: SlotId, id: string | null) => setZustand((z) => ({ ...z, wahl: { ...z.wahl, [slot]: id } }))
-  const setTab = (t: Modus | 'noten') =>
-    setZustand((z) => (t === 'noten' ? { ...z, ansicht: 'noten' } : { ...z, ansicht: 'wahl', modus: t }))
+  const setAnsicht = (a: Ansicht) => setZustand((z) => ({ ...z, ansicht: a }))
+  const setModus = (m: Modus) => setZustand((z) => ({ ...z, modus: m }))
   const zuruecksetzen = () =>
     setZustand((z) => (z.ansicht === 'noten' ? { ...z, punkte: leerePunkte() } : { ...z, wahl: leereWahl() }))
   const grundzustand = normalisiere({ ...zustand, wahl: leereWahl() }).wahl
@@ -58,9 +58,9 @@ function App() {
       </header>
 
       <div className="steuerung">
-        <div className="modus" role="group" aria-label="Modus">
+        <div className="modus" role="group" aria-label="Ansicht">
           {TABS.map((t) => (
-            <button key={t.id} type="button" aria-pressed={tab === t.id} onClick={() => setTab(t.id)}>
+            <button key={t.id} type="button" aria-pressed={ansicht === t.id} onClick={() => setAnsicht(t.id)}>
               {t.label}
             </button>
           ))}
@@ -69,7 +69,9 @@ function App() {
           Zurücksetzen
         </button>
       </div>
-      <p className="modus-hinweis">{TABS.find((t) => t.id === tab)!.hinweis}</p>
+      <p className="modus-hinweis">
+        {ansicht === 'noten' ? NOTEN_HINWEIS : MODI.find((m) => m.id === modus)!.hinweis}
+      </p>
 
       {ansicht === 'noten' ? (
         <Notenrechner
@@ -81,6 +83,17 @@ function App() {
         />
       ) : (
         <>
+          <div className="umschalter">
+            <span>Wahl</span>
+            <div className="modus" role="group" aria-label="Modus">
+              {MODI.map((m) => (
+                <button key={m.id} type="button" aria-pressed={modus === m.id} onClick={() => setModus(m.id)}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {sackgasse && (
             <div className="sackgasse" role="alert">
               Deine aktuelle Auswahl lässt sich nicht mehr regelkonform vervollständigen. Entferne einzelne Fächer oder
