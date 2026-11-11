@@ -153,12 +153,14 @@ button:focus-visible {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: 1rem;
-  align-items: start;
 }
 
+/* Subgrid: Überschriften und Slots nebeneinanderliegender Kursarten teilen sich die Zeilenhöhe. */
 .kategorie {
   display: grid;
-  gap: 0.75rem;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: 0.75rem;
 }
 
 .kategorie h2 {
