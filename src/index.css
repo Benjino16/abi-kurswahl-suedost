@@ -324,6 +324,133 @@ button:focus-visible {
   opacity: 0.65;
 }
 
+/* Übersicht */
+
+.uebersicht-knopf {
+  display: block;
+  margin: 1.25rem auto 0;
+  padding: 0.55rem 1.25rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--accent-strong);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.uebersicht {
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.uebersicht::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.uebersicht-kopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.uebersicht-kopf h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.uebersicht-schliessen {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--muted);
+}
+
+.uebersicht-gruppe {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.uebersicht-gruppe h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.uebersicht-gruppe dl {
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.uebersicht-gruppe dl div {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.uebersicht-gruppe dt {
+  width: 3.5rem;
+  flex: none;
+  color: var(--muted);
+}
+
+.uebersicht-gruppe dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.uebersicht-gruppe dd.leer {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Feste Breite, damit z. B. „4“ und „4-“ linksbündig untereinander stehen. */
+.uebersicht-gruppe dd.uebersicht-zusatz {
+  flex: none;
+  width: 3.25rem;
+  margin-left: auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.uebersicht .ergebnis {
+  margin-bottom: 0.75rem;
+}
+
+.uebersicht .ergebnis-wert {
+  font-size: 1.75rem;
+}
+
+.uebersicht-status {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  text-align: center;
+  font-weight: 600;
+  background: var(--chip);
+  color: var(--muted);
+}
+
+.uebersicht-status.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.uebersicht-status.fehler {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
 /* Notenrechner */
 
 .umschalter {

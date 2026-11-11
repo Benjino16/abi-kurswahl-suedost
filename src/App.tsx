@@ -3,6 +3,7 @@ import { freieAnzeige, gefuehrteAnzeige } from './anzeige'
 import { Notenrechner } from './components/Notenrechner'
 import { RegelStatus } from './components/RegelStatus'
 import { SlotKarte } from './components/SlotKarte'
+import { KurswahlUebersicht } from './components/Uebersicht'
 import { GEWICHT, leerePunkte } from './domain/noten'
 import { istVervollstaendigbar } from './domain/solver'
 import { KATEGORIEN, SLOTS, leereWahl, type SlotId } from './domain/types'
@@ -118,6 +119,8 @@ function App() {
               </section>
             ))}
           </div>
+
+          <KurswahlUebersicht wahl={wahl} />
 
           <RegelStatus wahl={wahl} modus={modus} />
 

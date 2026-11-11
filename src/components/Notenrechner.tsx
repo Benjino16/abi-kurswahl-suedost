@@ -15,6 +15,7 @@ import {
 import { SCHRIFTLICH, SLOTS, type Kategorie, type Slot, type SlotId, type Wahl } from '../domain/types'
 import type { Skala } from '../zustand'
 import { RegelListe } from './RegelStatus'
+import { Uebersicht, UebersichtKurse, type UebersichtStatus } from './Uebersicht'
 
 const KURSART: Record<Kategorie, string> = { lk: 'LK', gk: 'GK', mgk: 'mGK', ak: 'AK' }
 
@@ -78,8 +79,50 @@ export function Notenrechner({ wahl, punkte, skala, onPunkte, onSkala }: Props) 
         ))}
       </div>
 
+      <NotenUebersicht wahl={wahl} punkte={punkte} gesamt={summe(SLOTS)} anzeigen={anzeigen} />
+
       <Ergebnis punkte={punkte} gesamt={summe(SLOTS)} />
     </>
+  )
+}
+
+interface UebersichtProps {
+  wahl: Wahl
+  punkte: Punkte
+  gesamt: number
+  anzeigen: (p: number) => string
+}
+
+function NotenUebersicht({ wahl, punkte, gesamt, anzeigen }: UebersichtProps) {
+  const vollstaendig = vollstaendigePunkte(punkte)
+  const offen = SLOTS.filter((s) => punkte[s.id] === null).length
+  const status: UebersichtStatus = !vollstaendig
+    ? { klasse: 'offen', text: offen === 1 ? 'Noch 1 Kurs ohne Note' : `Noch ${offen} Kurse ohne Note` }
+    : pruefeNoten(vollstaendig).length > 0
+      ? { klasse: 'fehler', text: 'Nicht bestanden' }
+      : { klasse: 'ok', text: '✓ Bestanden' }
+
+  return (
+    <Uebersicht titel="Meine Noten" status={status}>
+      <div className="ergebnis">
+        <div>
+          <span className="ergebnis-label">Abiturnote</span>
+          <span className="ergebnis-wert">{vollstaendig ? komma(abiturnote(gesamt)) : '–'}</span>
+        </div>
+        <div>
+          <span className="ergebnis-label">Gesamtpunkte</span>
+          <span className="ergebnis-wert">
+            {gesamt}
+            <small> / {MAX_GESAMT}</small>
+          </span>
+        </div>
+      </div>
+      <UebersichtKurse
+        wahl={wahl}
+        leer=""
+        zusatz={(s) => (punkte[s.id] === null ? '–' : anzeigen(punkte[s.id]!))}
+      />
+    </Uebersicht>
   )
 }
 
